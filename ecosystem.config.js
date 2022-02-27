@@ -20,7 +20,7 @@ module.exports = {
       repo : 'https://github.com/fazi1live/Pm2-Continuous-Deployment',
       path : '/root/Pm2-Continuous-Deployment',
       'post-deploy' : 'npm install && pm2 reload ecosystem.config.js --env production',
-      key : "/root/.ssh/deploy_keys/git_key_testing"
+      key : "/root/.ssh/deploy_keys/git_key_testing.pub"
     }
   }
 };
