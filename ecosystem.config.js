@@ -15,7 +15,7 @@ module.exports = {
   deploy : {
     production : {
       user : 'root',
-      host : '64.227.136.195/',
+      host : '64.227.136.195',
       ref  : 'origin/master',
       repo : 'https://github.com/fazi1live/Pm2-Continuous-Deployment',
       path : '/root/Pm2-Continuous-Deployment',
