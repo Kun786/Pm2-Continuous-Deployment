@@ -1,0 +1,22 @@
+{
+  "name": "pm2-continuous-deployment",
+  "version": "1.0.0",
+  "description": "Pm2-Continuous-Deployment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fazi1live/Pm2-Continuous-Deployment.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fazi1live/Pm2-Continuous-Deployment/issues"
+  },
+  "homepage": "https://github.com/fazi1live/Pm2-Continuous-Deployment#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
