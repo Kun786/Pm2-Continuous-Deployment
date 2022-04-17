@@ -8,6 +8,7 @@ const today = new Date();
 const day = today.getDate();
 const month = today.getMonth() + 1;
 const year = today.getFullYear();
+const time = today.getTime();
 
 //Start Block Schema Creating
 const AdminRegisterSchema = mongoose.Schema({
@@ -20,7 +21,7 @@ const AdminRegisterSchema = mongoose.Schema({
     Status: { type:Number, default:1 },
     CreatedDate: {
         type: String,
-        default: `${year}-${month}-${day}`,
+        default: `${year}-${month}-${day}-${time}`,
     }
 })
 

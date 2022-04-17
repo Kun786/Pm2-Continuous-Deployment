@@ -39,6 +39,10 @@ const _AdminManagementRoutes = require('./routes/AdminManagementRoute');
 const _UserManagementRoutes = require('./routes/UserManagementRoute');
 const _ExamSubscriptionPlanManagementRoute = require('./routes/ExamSubscriptionPlanManagementRoute');
 const _PasswordManagementRoute = require('./routes/PasswordManagementRoute');
+const _StripeManagementRoute = require('./routes/StripeManagementRoute');
+const _OrderManagementRoute = require('./routes/OrderManagementRoute');
+const _UserQuestionnaireContainerRoute = require('./routes/UserQuestionnaireContainerRoute');
+const _QuestionAnswerManagementRoute = require('./routes/QuestionAnswersManagementRoute');
 
 //*****UsingRoutes*****//
 app.use('/QuestionaireManagement',_QuestionaireManagementRoute);
@@ -46,6 +50,10 @@ app.use('/AdminManagement',_AdminManagementRoutes);
 app.use('/UserManagement',_UserManagementRoutes);
 app.use('/ExamSubscriptionPlanManagement',_ExamSubscriptionPlanManagementRoute);
 app.use('/PasswordManagement',_PasswordManagementRoute)
+app.use('/StripeManagement',_StripeManagementRoute);
+app.use('/OrderManagement',_OrderManagementRoute);
+app.use('/UserQuestionnaireContainerManagement',_UserQuestionnaireContainerRoute);
+app.use('/QuestionAnswerManagement',_QuestionAnswerManagementRoute);
 app.use(express.static(path.join(__dirname,'/frontend-lms')));
 //*****UsingRoutes*****//
 
@@ -85,4 +93,6 @@ app.listen(PORT, () => {
     //     console.log(data);
     // })
 })
+
+
 //End Block For Listening Your App On Defined Port

@@ -1,134 +1,36 @@
 const _QuestionnaireCluster = require('../models/QuestionnaireManagementModel');
-const _DummyExamModel = require('../models/DummyExamModel');
 const _ExamSubscriptionManagementModel = require('../models/ExamSubscriptionManagementModel');
+const _SubCategoryModel = require('../models/SubCategoryModel');
+const _MapSubCategoryAndTopicCollection = require('../models/MapSubcategoryAndTopic');
 
-
-
-const DummyExam = async (req, res) => {
-    try {
-        const { ExamPlan, Price, TotalQuestions, Remarks } = req.body;
-        const FindExamIfAlreadyExists = await _DummyExamModel.findOne(
-            { ExamPlan: ExamPlan }
-        )
-        if (FindExamIfAlreadyExists !== null) {
-            const _UpdateExamPlanQuestions = await _DummyExamModel.updateOne(
-                { ExamPlan: ExamPlan },
-                { $inc: { TotalQuestions: TotalQuestions } }
-            )
-            res.json({
-                Message: `New Questions Added To Existing Plan ${ExamPlan}`,
-                Data: true,
-                Result: true,
-                Status: 1
-            })
-        } else {
-            const DummyToSave = new _DummyExamModel({
-                ExamPlan: ExamPlan,
-                Price: Price,
-                TotalQuestions: TotalQuestions,
-                Remarks: Remarks
-            })
-            const SavedData = await DummyToSave.save();
-            res.json({
-                Message: 'Question has Added to Exam Plan Successfuly',
-                Data: true,
-                Result: true,
-                Status: 2
-            })
-        }
-    } catch (error) {
-        res.json({
-            Message: error.message,
-            Data: false,
-            Result: null
-        })
-    }
-}
-
-const GetDummyExam = async (req, res) => {
-    try {
-        const GetAllDummyExams = await _DummyExamModel.find().lean();
-        res.json({
-            Message: 'Found Successfuly',
-            Data: true,
-            Result: GetAllDummyExams
-        })
-    } catch (error) {
-        res.json({
-            Message: error.message,
-            Data: false,
-            Result: null
-        })
-    }
-}
-
-const DeleteById = async (req, res) => {
-    try {
-
-        const _ExamId = req.params._ExamId;
-        const DocumentToDelete = await _DummyExamModel.remove(
-            { _id: _ExamId }
-        )
-        res.json({
-            Message: 'Exam Deleted Successfuly',
-            Data: true,
-            Result: DocumentToDelete
-        })
-    } catch (error) {
-        res.json({
-            Message: error.message,
-            Data: false,
-            Result: null
-        })
-    }
-}
-
-const EditDummyExamById = async (req, res) => {
-    try {
-        const _ExamId = req.params._ExamId;
-        const TotalQuestions = req.body;
-        const UpdateExamQuestions = await _DummyExamModel.updateOne(
-            { _id: _ExamId },
-            { $set: { TotalQuestions: TotalQuestions } }
-        );
-        res.json({
-            Message: `Questions has Updated in ExamPlan`,
-            Data: true,
-            Result: UpdateExamQuestions
-        })
-    } catch (error) {
-        res.json({
-            Message: error.message,
-            Data: false,
-            Result: null
-        })
-    }
-}
-
-const GetEditDummyExamById = async (req, res) => {
-    try {
-        const _ExamId = req.params._ExamId;
-        const GetExam = await _DummyExamModel.findOne(
-            { _id: _ExamId }
-        )
-        res.json({
-            Message: 'Found',
-            Data: true,
-            Result: GetExam
-        })
-    } catch (error) {
-        res.json({
-            Message: error.message,
-            Data: false,
-            Result: null
-        })
-    }
-}
 
 const CreateQuestionnaire = async (req, res) => {
     try {
+        let a = true;
         const { ExamPlan, Price, QuestionsArray } = req.body;
         const _CheckExamPlanFromDataBase = await _QuestionnaireCluster.find({ ExamPlan: ExamPlan }).lean();
+        const GetTotalQuestions = await _ExamSubscriptionManagementModel.findOne({ExamPlan:ExamPlan}).lean();
+
+        if(GetTotalQuestions.Status === 1){
+            const UpdateExamStatus = await _ExamSubscriptionManagementModel.updateOne(
+                {ExamPlan:ExamPlan},
+                {$inc:{QuestionToAdd:-QuestionsArray.length}}
+                )
+        }
+
+        // const UpdatedTotalQuestions = await _ExamSubscriptionManagementModel.findOne({ExamPlan:ExamPlan}).lean();
+        if(GetTotalQuestions.QuestionToAdd === 0){
+                const UpdateExamStatus = await _ExamSubscriptionManagementModel.updateOne(
+                    {ExamPlan:ExamPlan},
+                    {Status:0}
+                    )
+                return res.json({
+                    Message:"Question Limit has Exceeded",
+                    Data:false,
+                    Result:null
+                })
+        }
+
         if (_CheckExamPlanFromDataBase.length >= 1) {
             const _AddMoreQuestionsToExam = await _QuestionnaireCluster.updateOne(
                 { _id: _CheckExamPlanFromDataBase[0]._id }, //filter
@@ -144,14 +46,20 @@ const CreateQuestionnaire = async (req, res) => {
             const _CreateExam = new _QuestionnaireCluster({
                 ExamPlan: ExamPlan,
                 Price: Price,
-                Questions: QuestionsArray
+                Questions: QuestionsArray,
+
             });
             const _AddExam = await _CreateExam.save();
+            const _AddIdToExamPlan = await _ExamSubscriptionManagementModel.updateOne(
+                {ExamPlan:ExamPlan},
+                {QuestionnaireId:_AddExam._id}
+            )
             res.json({
                 Message: `ExamPlan and Question Added Successfuly`,
                 Data: true,
                 Result: _AddExam,
-                Status: 2
+                Status: 2,
+                Questions:QuestionsArray
             })
         }
     } catch (error) {
@@ -200,29 +108,57 @@ const GetQuestionnaireById = async (req, res) => {
     }
 }
 
+const GetQuestionnaireByName = async (req, res) => {
+    try {
+        const ExamPlan = req.body;
+        const DocToGet = await _QuestionnaireCluster.findOne(
+            { ExamPlan:ExamPlan }
+        )
+        res.json({
+            Message:'Document Found Successfuly',
+            Data:true,
+            Result:DocToGet
+        })
+    } catch (error) {
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+} 
+
 const DeleteFullQuestionnaire = async (req, res) => {
     try {
-        const Id = req.params._ExamId;
+
+        // const Promise = [
+        //     _ExamSubscriptionManagementModel.updateOne(
+        //         { ExamPlan: ExamPlan },
+        //         { QuestionToAdd: GetExam.TotalQuestions }
+        //     ),
+        //     _QuestionnaireCluster.deleteOne(
+        //         { ExamPlan: ExamPlan }
+        //     )
+        // ]
+        // const ResolvePromise = await Promise.all(Promise);
+
+
         const ExamPlan = req.body;
-        const GetQuestionnaire = await _DummyExamModel.findOne(
-            { ExamPlan: ExamPlan }
+        const GetExam = await _ExamSubscriptionManagementModel.findOne(
+            {ExamPlan:ExamPlan}
         )
-        if (GetQuestionnaire !== null) {
-            res.json({
-                Message: 'Warning! You cannot delete the ExamPlan because It already have Questions in it. So pelese Delete all Questions and then You can Delete the Exam Plan',
-                Data: true,
-                Result: true,
-                Status: 1
-            })
-        } else {
-            const _DeleteExam = await _ExamSubscriptionManagementModel.remove({ _id: Id });
-            res.json({
-                Message: 'Exam Has Deleted Successfuly',
-                Data: true,
-                Result: _DeleteExam,
-                Status:2
-            })
-        }
+        const UpdateExam = await _ExamSubscriptionManagementModel.updateOne(
+            {ExamPlan:ExamPlan},
+            {QuestionToAdd:GetExam.TotalQuestions}
+        )
+        const _DocToRemove = await _QuestionnaireCluster.deleteOne(
+            {ExamPlan:ExamPlan}
+        );
+        res.json({
+            Message:'Questionnaire Deleted Successfuly Now You Delete the Exam',
+            Data:true,
+            Result:true
+        })
     } catch (error) {
         res.json({
             Message: error.message,
@@ -259,15 +195,167 @@ const DeleteFullQuestionnaire = async (req, res) => {
 //     }
 // }
 
+const AddSubCategory = async(req, res) => {
+    try {
+        const { SubCategory } = req.body;
+        const CheckIfSubcategoryExist = await _SubCategoryModel.findOne(
+            {SubCategory:SubCategory}
+        ) 
+        
+        if(CheckIfSubcategoryExist !== null){
+            return res.json({
+                Message:'SubCategory Already Exists and You cannot Duplicate it',
+                Data:false,
+                Result:null
+            })
+        }
+       
+        const DocToSave = new _SubCategoryModel({
+            SubCategory:SubCategory
+        })
+        const SavedData = await DocToSave.save();
+        res.json({
+            Message:'SubCategory Saved Successfuly',
+            Data:true,
+            Result:SavedData,
+        })
+    } catch (error) {
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+}
+
+const MapSubCategoryAndTopic = async(req, res) => {
+    try {
+        const { Category, SubCategory } = req.body;
+         SubCategoryObject = {SC:SubCategory}
+        const FindIfTopicAlreadyExists = await _MapSubCategoryAndTopicCollection.findOne(
+            {Category:Category}
+            )
+
+        const FindIfSubCategoryAlreadyExists = await _MapSubCategoryAndTopicCollection.findOne(
+            {Category:Category,'SubCategory.SC':SubCategory}
+        )
+            console.log(FindIfSubCategoryAlreadyExists);
+        if( FindIfSubCategoryAlreadyExists !== null ){
+            return res.json({
+                Message:`${SubCategory} Already Exists for ${Category}`,
+                Data:false,
+                Result:null,
+            })
+        }
+
+        if(FindIfTopicAlreadyExists !== null){
+            UpdateToDoc = await _MapSubCategoryAndTopicCollection.updateOne(
+                {Category:Category},
+                {$push:{SubCategory:SubCategoryObject}}
+            )
+            return res.json({
+                Message:`${SubCategory} added into ${Category}`,
+                Data:true,
+                Result:true,
+                Status:2
+            })
+        }
+        
+        const DocToSave = new _MapSubCategoryAndTopicCollection({
+            Category:Category,
+            SubCategory:SubCategoryObject
+        })
+        const SavedData = await DocToSave.save();
+        res.json({
+            Message:'SubCategory Saved Successfuly',
+            Data:true,
+            Result:SavedData,
+            Status:1
+        })
+    } catch (error) {
+        console.log(error.message);
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+}
+
+const GetSubCategory = async(req, res) => {
+    try {
+        const GetAllSubCategory = await _SubCategoryModel.find();
+        res.json({
+            Message:'Data Found Successfuly',
+            Data:true,
+            Result:GetAllSubCategory
+        })
+    } catch (error) {
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+}
+
+const GetALlMappedValues = async (req, res) => {
+    try {
+        const GetAllMappedValuesFromDb = await _MapSubCategoryAndTopicCollection.find();
+        res.json({
+            Message:'Found Successfuly',
+            Data:true,
+            Result:GetAllMappedValuesFromDb
+        })        
+    } catch (error) {
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+}
+
+const DeleteCategoryByName = async(req, res) => {
+    try {
+        const {SubCategory} = req.body;
+        const CheckIfSubCategoryMappedWithQuestionnaire = await _MapSubCategoryAndTopicCollection.find(
+            {SubCategory:SubCategory}
+        )
+        if(CheckIfSubCategoryMappedWithQuestionnaire.length !== 0){
+            return res.json({
+                Message:'You Cannot Delete SubCategory As It is Mapped With Topics Unpair It With Topic and Then Delete',
+                Data:false,
+                Result:null
+            })
+        }
+
+        const DocToDelete = await _SubCategoryModel.deleteOne(
+            {SubCategory:SubCategory}
+        )
+        res.json({
+            Message:'Deleted Successfuly',
+            Data:true,
+            Result:true
+        })
+    } catch (error) {
+        res.json({
+            Message: error.message,
+            Data: false,
+            Result: null
+        })
+    }
+}
 
 module.exports = {
     CreateQuestionnaire,
     GetAllQuestionnaires,
     DeleteFullQuestionnaire,
     GetQuestionnaireById,
-    DummyExam,
-    GetDummyExam,
-    DeleteById,
-    EditDummyExamById,
-    GetEditDummyExamById
+    GetQuestionnaireByName,
+    AddSubCategory,
+    GetSubCategory,
+    MapSubCategoryAndTopic,
+    GetALlMappedValues,
+    DeleteCategoryByName
 }

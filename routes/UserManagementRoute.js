@@ -12,7 +12,8 @@ const {
     DeleteUserById,
     ActiveUserStatusById,
     DeactivateUserStatusById,
-    GetUserInformationById
+    GetUserInformationById,
+    GetUserWithQuestionnaireInformation
 } = require('../controllers/UserManagementController')
 //End Block Accessing The Library Files And Routes
 
@@ -25,6 +26,7 @@ Router.delete('/DeleteUserById/:_UserId',DeleteUserById);
 Router.post('/ActiveUserStatusById/:_UserId',ActiveUserStatusById);
 Router.post('/DeactivateUserStatusById/:_UserId',DeactivateUserStatusById);
 Router.get('/GetUserInformationById/:_UserId',GetUserInformationById);
+Router.get('/GetUserWithQuestionnaireInformation/:_UserId',GetUserWithQuestionnaireInformation);
 //End Block For Accessing The Controlers
 
 

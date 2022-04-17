@@ -8,16 +8,16 @@ const SendEmailUsingNodeMailer = async (_Email, _Link, _CredentialsObject) => {
     const _SmtpService = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'Your Gmail', // generated ethereal user
-        pass: 'Your App Password', // generated ethereal password
+        user: 'itismyworkspace@gmail.com', // generated ethereal user
+        pass: 'mitlndcbonnoffev', // generated ethereal password
       },
     });
     //Email Object
 
     const _EmailObject = {
-      from: 'Your Gmail', // sender address
+      from: 'itismyworkspace@gmail.com', // sender address
       to: _Email, // list of receivers
-      subject: "Your Gmail", // Subject linea
+      subject: "Skillstitute", // Subject linea
       html: `<b>
       <h3>UserId: ${_CredentialsObject.UserId}</h3>
       <h3>UserId: ${_CredentialsObject.Token}</h3>
